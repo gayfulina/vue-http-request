@@ -2,10 +2,15 @@
   <section>
     <base-card>
       <h2>Submitted Experiences</h2>
+
       <div>
         <base-button @click='getResult'>Load Submitted Experiences</base-button>
       </div>
-      <ul>
+
+      <div v-if='isLoading'>Loading...</div>
+      <p v-else-if='!isLoading && error'>{{error}}</p>
+      <p v-else-if='!isLoading && (!results || results.length === 0)'>No stored experiences found. Start adding some survey results first</p>
+      <ul v-else>
         <survey-result
           v-for='result in results'
           :key='result.id'
@@ -27,7 +32,9 @@ export default {
   },
   data() {
     return {
-      results: []
+      results: [],
+      isLoading: false,
+      error: null,
     };
   },
   methods: {
@@ -54,8 +61,11 @@ export default {
     // },
 
     getResult() {
+      this.isLoading = true;
+      this.error = null;
       axios.get('https://vue-http-demo-77e9e-default-rtdb.firebaseio.com/surveys.json')
         .then(res => {
+          this.isLoading = false;
           console.log(res.data);
           const tempResults = [];
           for (const id in res.data) {
@@ -67,8 +77,15 @@ export default {
           }
           this.results = tempResults;
         })
-        .catch(err => err);
+        .catch(err => {
+          console.log(err);
+          this.isLoading = false;
+          this.error = 'Failed to fetch data - please try again later'
+        });
     }
+  },
+  mounted() {
+    this.getResult();
   }
 };
 </script>

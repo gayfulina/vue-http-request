@@ -26,9 +26,8 @@
           <input type='radio' id='rating-great' value='great' name='rating' v-model='chosenRating' />
           <label for='rating-great'>Great</label>
         </div>
-        <p
-          v-if='invalidInput'
-        >One or more input fields are invalid. Please check your provided data.</p>
+        <p v-if='invalidInput'>One or more input fields are invalid. Please check your provided data.</p>
+        <p v-if='error'>{{ error }}</p>
         <div>
           <base-button>Submit</base-button>
         </div>
@@ -39,12 +38,14 @@
 
 <script>
 import axios from 'axios';
+
 export default {
   data() {
     return {
       enteredName: '',
       chosenRating: null,
-      invalidInput: false
+      invalidInput: false,
+      error: null
     };
   },
   // emits: ['survey-submit'],
@@ -55,6 +56,7 @@ export default {
         return;
       }
       this.invalidInput = false;
+      this.error = null;
 
       // this.$emit('survey-submit', {
       //   userName: this.enteredName,
@@ -74,8 +76,19 @@ export default {
 
       axios.post('https://vue-http-demo-77e9e-default-rtdb.firebaseio.com/surveys.json', {
         name: this.enteredName,
-        rating: this.chosenRating,
-      });
+        rating: this.chosenRating
+      })
+        .then(res => {
+          if (res.status === 200) {
+//...
+          } else {
+            throw new Error('Could not save data');
+          }
+        })
+        .catch(err => {
+          console.log(err);
+          this.error = err.message;
+        });
 
       this.enteredName = '';
       this.chosenRating = null;
